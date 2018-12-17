@@ -4,23 +4,26 @@ from watchdog.events import PatternMatchingEventHandler
 
 
 class MyHandler(PatternMatchingEventHandler):
+    """Detects created notifications"""
     patterns = ["*.notify"]
 
     def process(self, event):
+        """Mimicks processing of event"""
         print(event.src_path.split('/')[-1].split('.')[0], event.event_type)
 
     def on_created(self, event):
+        """Callback on created file"""
         self.process(event)
 
-arg = "/var/www/html/notifications"
-observer = Observer()
-observer.schedule(MyHandler(), path=arg)
-observer.start()
+NOTIFICATION_PATH = "/var/www/html/notifications"
+OBSERVER = Observer()
+OBSERVER.schedule(MyHandler(), path=NOTIFICATION_PATH)
+OBSERVER.start()
 
 try:
     while True:
         time.sleep(1)
 except KeyboardInterrupt:
-    observer.stop()
+    OBSERVER.stop()
 
-observer.join()
+OBSERVER.join()

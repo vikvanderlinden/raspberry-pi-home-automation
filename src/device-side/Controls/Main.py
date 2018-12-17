@@ -1,34 +1,37 @@
-import pymysql
 import time
 import os
+import pymysql
+from Speech import say
 
 
-sensor_base_path = "/sys/bus/w1/devices/"
+SENSOR_BASE_PATH = "/sys/bus/w1/devices/"
 
-temperature_sensor_path = sensor_base_path + "28-000004fd2ca3"
-temperature_sensor_file = temperature_sensor_path + "/w1_slave"
+TEMPERATURE_SENSOR_PATH = SENSOR_BASE_PATH + "28-000004fd2ca3"
+TEMPERATURE_SENSOR_FILE = TEMPERATURE_SENSOR_PATH + "/w1_slave"
 
-server_notifications_path = "/var/www/html/notifications"
+SERVER_NOTIFICATION_PATH = "/var/www/html/notifications"
 
 
 os.system('modprobo w1-gpio')
 os.system('modprobe w1-therm')
 
-db_connection = pymysql.connect("127.0.0.1", "root", "RaspberryVV", "testdb")
-db_cursor = db_connection.cursor()
+DB_CONNECTION = pymysql.connect("127.0.0.1", "root", "RaspberryVV", "testdb")
+DB_CURSOR = DB_CONNECTION.cursor()
 
 
 def read_temp_raw():
-    f = open(temperature_sensor_file, 'r')
-    lines = f.readlines()
-    f.close()
-    
+    """Reads the raw temperature"""
+    temperature_file = open(TEMPERATURE_SENSOR_FILE, 'r')
+    lines = temperature_file.readlines()
+    temperature_file.close()
+
     return lines
 
 
 def current_temperature():
+    """Reads the current temperature"""
     lines = read_temp_raw()
-    
+
     while lines[0].strip()[-3:] != 'YES':
         time.sleep(0.2)
         lines = read_temp_raw()
@@ -45,16 +48,15 @@ def current_temperature():
 
 
 def log_temperature():
+    """Logs the temperature"""
     temp = current_temperature()
 
     sql = "INSERT INTO temperatures (temperature) VALUES ('%f');" % (temp)
 
     try:
-        db_cursor.execute(sql)
-        db_connection.commit()
-        say("logged temperature of " + str(round(temp, 2)) + " degrees celcius logged."
-    except Exception as e:
-        print("aiai, rollback -", e)
-        db_connection.rollback()
-
-
+        DB_CURSOR.execute(sql)
+        DB_CONNECTION.commit()
+        say("logged temperature of " + str(round(temp, 2)) + " degrees celcius.")
+    except Exception as exception:
+        print("aiai, rollback -", exception)
+        DB_CONNECTION.rollback()

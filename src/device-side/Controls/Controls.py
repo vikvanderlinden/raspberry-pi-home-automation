@@ -1,3 +1,5 @@
+import time
+import os
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 from Switches import *
@@ -6,72 +8,74 @@ from Actions import *
 from Speech import *
 from Time import *
 from DB import *
-import time
-import os
 
 
 say("Setting up the system")
 
 def notify(src_path):
-	"""
-		Decodes which notification, removes notification file and executes proper action to notification.
-	"""
-	file_name = src_path.split('/')[-1]
-	notification = file_name.split('.')[0]
-	os.remove(src_path)
+    """
+        Decodes which notification, removes notification file
+        and executes proper action to notification.
+    """
+    file_name = src_path.split('/')[-1]
+    notification = file_name.split('.')[0]
+    os.remove(src_path)
 
-	say("I saw you updated the %s, i'll update my %s as well." % tuple([notifications[notification][0]]*2))
-	notifications[notification][1]()
+    say("I saw you updated the %s, i'll update my %s as well."
+        % tuple([NOTIFICATIONS[notification][0]]*2))
+    NOTIFICATIONS[notification][1]()
 
 
 class NotificationHandler(PatternMatchingEventHandler):
-	patterns = ["*.notify"]
+    """Handles creation of server-side notifications"""
+    patterns = ["*.notify"]
 
-	def on_created(self, event):
-		notify(event.src_path)
+    def on_created(self, event):
+        """Handles creation of event"""
+        notify(event.src_path)
 
 
 # Variables
-database_host = "127.0.0.1"
-database_user = "root"
-database_password = "RaspberryVV"
-database_database = "controls"
-last_auto_update = get_time()
+DATABASE_HOST = "127.0.0.1"
+DATABASE_USER = "root"
+DATABASE_PASSWORD = "RaspberryVV"
+DATABASE_NAME = "controls"
+LAST_AUTO_UPDATE = get_time()
 
-path_to_watch = "/var/www/html/notifications"
+PATH_TO_WATCH = "/var/www/html/NOTIFICATIONS"
 
-say("Initializing");
+say("Initializing")
 
 # Initializations
-database = DB(database_host, database_user, database_password, database_database)
-actions = Actions(database)
-schedule = Schedule(database, actions)
-observer = Observer()
+DATABASE = DB(DATABASE_HOST, DATABASE_USER, DATABASE_PASSWORD, DATABASE_NAME)
+ACTIONS = Actions(DATABASE)
+SCHEDULE = Schedule(DATABASE, ACTIONS)
+OBSERVER = Observer()
 
 # Definitions
-notifications = {
-					"update_schedule": ["schedule", schedule.update],
-					"update_actions": ["actions", actions.update]
-				}
+NOTIFICATIONS = {
+    "update_schedule": ["schedule", SCHEDULE.update],
+    "update_actions": ["actions", ACTIONS.update]
+}
 
 # Prepare system
-observer.schedule(NotificationHandler(), path=path_to_watch, recursive=False)
-observer.start()
+OBSERVER.schedule(NotificationHandler(), path=PATH_TO_WATCH, recursive=False)
+OBSERVER.start()
 
-say("Done, application starts now");
+say("Done, application starts now")
 
 try:
-	while True:
-		if get_time() - last_auto_update > 24 * 60 * 60:
-			# Auto-refresh schedule every day
-			last_auto_update = get_time()
-			schedule.update()
-			say("I did an autoupdate as is was a full day ago")
+    while True:
+        if get_time() - LAST_AUTO_UPDATE > 24 * 60 * 60:
+            # Auto-refresh schedule every day
+            LAST_AUTO_UPDATE = get_time()
+            SCHEDULE.update()
+            say("I did an autoupdate as is was a full day ago")
 
-		schedule.run()
-		time.sleep(1)
+        SCHEDULE.run()
+        time.sleep(1)
 except KeyboardInterrupt:
-	database.close_connection()
-	observer.stop()
+    DATABASE.close_connection()
+    OBSERVER.stop()
 
-observer.join()
+OBSERVER.join()
