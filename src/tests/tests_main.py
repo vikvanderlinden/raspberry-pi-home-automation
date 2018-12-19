@@ -7,5 +7,5 @@ try:
 	CONFIG = config.Config("./device_side/configuration/.env.example")
 except FileNotFoundError:
 	assert False
-except KeyError
+except KeyError:
 	assert False
