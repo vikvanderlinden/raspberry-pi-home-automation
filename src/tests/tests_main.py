@@ -2,8 +2,10 @@ import device_side
 
 from device_side import config
 
-CONFIG = config.Config("./device_side/configuration/.env")
-# CONFIG.set("database.host", "127.0.0.1")
-# CONFIG.set("database.host", "localhost")
-print(CONFIG.configuration)
-print(CONFIG.get("database.host"))
+# Should run without exceptions
+try:
+	CONFIG = config.Config("./device_side/configuration/.env.example")
+except FileNotFoundError:
+	assert False
+except KeyError
+	assert False
