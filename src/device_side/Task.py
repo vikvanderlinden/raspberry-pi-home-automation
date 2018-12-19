@@ -1,6 +1,6 @@
 from math import floor
-from Speech import *
-from Time import *
+from speech import *
+from time import *
 
 
 # TEMPORARY TESTFUNCTION

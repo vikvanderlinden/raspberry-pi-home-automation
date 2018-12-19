@@ -1,7 +1,7 @@
 import time
 import os
 import pymysql
-from Speech import say
+from speech import say
 
 
 SENSOR_BASE_PATH = "/sys/bus/w1/devices/"

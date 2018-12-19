@@ -1,6 +1,6 @@
-from Speech import *
-from Time import *
-from Task import *
+from speech import *
+from time import *
+from task import *
 
 
 class Schedule:

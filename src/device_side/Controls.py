@@ -2,12 +2,12 @@ import time
 import os
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
-from Switches import *
-from Schedule import *
-from Actions import *
-from Speech import *
-from Time import *
-from DB import *
+from switches import *
+from schedule import *
+from actions import *
+from speech import say
+from time import *
+from database import *
 
 
 say("Setting up the system")

@@ -1,4 +1,4 @@
-from Speech import *
+from speech import *
 import pymysql
 
 
