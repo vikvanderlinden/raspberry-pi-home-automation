@@ -1,2 +1,6 @@
 
-src/device-side/configuration/\.env
+src/device_side/configuration/\.env
+
+src/tests/__pycache__/
+
+src/device_side/__pycache__/

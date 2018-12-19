@@ -10,7 +10,7 @@ def say(text=""):
     if text == "":
         return
 
-    with open('Speech/speech.mp3', 'wb') as handle:
+    with open('speech/speech.mp3', 'wb') as handle:
         file = url.get(
             'http://translate.google.com/translate_tts?ie=YTF-8&total=1&idx=0&textlen=' + \
             str(len(text)) + '&client=tw-ob&q=' + text + '&tl=En-us', stream=True)
@@ -21,7 +21,7 @@ def say(text=""):
             handle.write(block)
 
     mixer.init()
-    mixer.music.load('/home/pi/Documents/Python Programs/Controls/Speech/speech.mp3')
+    mixer.music.load('/home/pi/Documents/python-programs/Controls/speech/speech.mp3')
     mixer.music.play()
 
     while mixer.music.get_busy():

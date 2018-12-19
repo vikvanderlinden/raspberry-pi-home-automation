@@ -51,10 +51,3 @@ class Config:
             raise KeyError("Item already exists")
 
         self.configuration[item_name] = item_value
-
-if __name__ == "__main__":
-    CONFIG = Config("./configuration/.env")
-    # CONFIG.set("database.host", "127.0.0.1")
-    # CONFIG.set("database.host", "localhost")
-    print(CONFIG.configuration)
-    print(CONFIG.get("database.host"))
