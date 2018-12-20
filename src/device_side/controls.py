@@ -1,16 +1,17 @@
-import time
+"""
+    The main file of the application.
+"""
 import os
-from watchdog.events import PatternMatchingEventHandler
-from watchdog.observers import Observer
-from switches import *
-from schedule import *
-from actions import *
-from speech import say
-from time import *
-from database import *
+from watchdog.events import PatternMatchingEventHandler #pylint: disable=E0401
+from watchdog.observers import Observer #pylint: disable=E0401
+# import switches
+import schedule #pylint: disable=E0401
+import actions #pylint: disable=E0401
+import speech #pylint: disable=E0401
+import database #pylint: disable=E0401
+import Config #pylint: disable=E0401
+from . import time
 
-
-say("Setting up the system")
 
 def notify(src_path):
     """
@@ -21,8 +22,8 @@ def notify(src_path):
     notification = file_name.split('.')[0]
     os.remove(src_path)
 
-    say("I saw you updated the %s, i'll update my %s as well."
-        % tuple([NOTIFICATIONS[notification][0]]*2))
+    speech.say("I saw you updated the %s, i'll update my %s as well."
+               % tuple([NOTIFICATIONS[notification][0]]*2))
     NOTIFICATIONS[notification][1]()
 
 
@@ -34,22 +35,16 @@ class NotificationHandler(PatternMatchingEventHandler):
         """Handles creation of event"""
         notify(event.src_path)
 
+CONFIG = Config('./configuration/.env')
 
 # Variables
-DATABASE_HOST = "127.0.0.1"
-DATABASE_USER = "root"
-DATABASE_PASSWORD = "RaspberryVV"
-DATABASE_NAME = "controls"
-LAST_AUTO_UPDATE = get_time()
-
-PATH_TO_WATCH = "/var/www/html/NOTIFICATIONS"
-
-say("Initializing")
+LAST_AUTO_UPDATE = time.get_time()
 
 # Initializations
-DATABASE = DB(DATABASE_HOST, DATABASE_USER, DATABASE_PASSWORD, DATABASE_NAME)
-ACTIONS = Actions(DATABASE)
-SCHEDULE = Schedule(DATABASE, ACTIONS)
+DATABASE = database.DB(CONFIG.get('database.host'), CONFIG.get('database.user'),
+                       CONFIG.get('database.password'), CONFIG.get('database.name'))
+ACTIONS = actions.Actions(DATABASE)
+SCHEDULE = schedule.Schedule(DATABASE, ACTIONS)
 OBSERVER = Observer()
 
 # Definitions
@@ -59,23 +54,26 @@ NOTIFICATIONS = {
 }
 
 # Prepare system
-OBSERVER.schedule(NotificationHandler(), path=PATH_TO_WATCH, recursive=False)
+OBSERVER.schedule(NotificationHandler(), path=CONFIG.get('notifications.path'), recursive=False)
 OBSERVER.start()
 
-say("Done, application starts now")
+if __name__ == "__main__":
+    speech.say("Setting up the system")
+    speech.say("Initializing")
+    speech.say("Done, application starts now")
 
-try:
-    while True:
-        if get_time() - LAST_AUTO_UPDATE > 24 * 60 * 60:
-            # Auto-refresh schedule every day
-            LAST_AUTO_UPDATE = get_time()
-            SCHEDULE.update()
-            say("I did an autoupdate as is was a full day ago")
+    try:
+        while True:
+            if time.get_time() - LAST_AUTO_UPDATE > 24 * 60 * 60:
+                # Auto-refresh schedule every day
+                LAST_AUTO_UPDATE = time.get_time()
+                SCHEDULE.update()
+                speech.say("I did an autoupdate as is was a full day ago")
 
-        SCHEDULE.run()
-        time.sleep(1)
-except KeyboardInterrupt:
-    DATABASE.close_connection()
-    OBSERVER.stop()
+            SCHEDULE.run()
+            time.sleep(1)
+    except KeyboardInterrupt:
+        DATABASE.close_connection()
+        OBSERVER.stop()
 
-OBSERVER.join()
+    OBSERVER.join()

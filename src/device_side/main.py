@@ -1,7 +1,10 @@
+"""
+    The main file for executing the initial version of the application.
+"""
 import time
 import os
-import pymysql
-from speech import say
+import pymysql #pylint: disable=E0401
+import speech #pylint: disable=E0401
 
 
 SENSOR_BASE_PATH = "/sys/bus/w1/devices/"
@@ -51,12 +54,12 @@ def log_temperature():
     """Logs the temperature"""
     temp = current_temperature()
 
-    sql = "INSERT INTO temperatures (temperature) VALUES ('%f');" % (temp)
+    query = "INSERT INTO temperatures (temperature) VALUES ('%f');" % (temp)
 
     try:
-        DB_CURSOR.execute(sql)
+        DB_CURSOR.execute(query)
         DB_CONNECTION.commit()
-        say("logged temperature of " + str(round(temp, 2)) + " degrees celcius.")
+        speech.say("logged temperature of " + str(round(temp, 2)) + " degrees celcius.")
     except Exception as exception:
         print("aiai, rollback -", exception)
         DB_CONNECTION.rollback()

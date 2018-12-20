@@ -1,5 +1,5 @@
 from speech import *
-import pymysql
+import pymysql #pylint: disable=E0401
 
 
 class DB:
@@ -53,7 +53,7 @@ class DB:
             self.execute(query)
             self.get_connection().commit()
         except Exception as exception:
-            self.get_database().rollback()
+            self.get_cursor().rollback()
             print("SQL INSERT EXCEPTION:", exception)
             return False
 
