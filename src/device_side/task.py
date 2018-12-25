@@ -1,53 +1,93 @@
+"""
+    Handles the tasks.
+"""
+
 from math import floor
-from speech import *
-from time import *
+import time
+import timings #pylint: disable=E0401
 
+def read_temp_raw(sensorpath):
+    """Reads the raw temperature"""
+    temperature_file = open(sensorpath, 'r')
+    lines = temperature_file.readlines()
+    temperature_file.close()
 
-# TEMPORARY TESTFUNCTION
-def log_temperature():
-    """Mimicks the temperature logging for now"""
-    print("taking temperature.")
+    return lines
+
+def current_temperature(sensorpath):
+    """Reads the current temperature"""
+    lines = read_temp_raw(sensorpath)
+
+    while lines[0].strip()[-3:] != 'YES':
+        time.sleep(0.2)
+        lines = read_temp_raw(sensorpath)
+
+    equals_pos = lines[1].find('t=')
+
+    if equals_pos != -1:
+        temp_string = lines[1][equals_pos + 2:]
+        temp_c = float(temp_string) / 1000
+
+        return temp_c
+
+    return False
+
+def log_temperature(configuration, database):
+    """Logs the temperature"""
+    temp = current_temperature(configuration.get('sensor.basepath') + configuration.get('sensor.tempsens'))
+
+    database.insert("temperatures", {"temperature": "%f"}, [temp])
 
 class Task:
     """Handles the tasks defined in the database"""
     # Choose right (used) variables when database is created
-    def __init__(self, actions, action_id, start_time, end_time, interval):
-        self.__actions = actions
-        self.__action_id = action_id
-        self.__start_time = get_time(start_time)
-        self.__end_time = None
+    def __init__(self, config, database, actions, action_id, start_time, end_time, interval):
+        self._config = config
+        self._database = database
+        self._actions = actions
+        self._action_id = action_id
+        self._start_time = timings.get_time(start_time)
+        self._end_time = None
         if end_time is not None:
-            self.__end_time = get_time(end_time)
-        self.__interval = interval
-        self.__last_run_time = 0
+            self._end_time = timings.get_time(end_time)
+        self._interval = interval
+        self._last_run_time = 0
+
+    def get_config(self):
+        """Returns the configuration object"""
+        return self._config
+
+    def get_database(self):
+        """Returns the database object"""
+        return self._database
 
     def get_actions(self):
         """Returns the actions"""
-        return self.__actions
+        return self._actions
 
     def get_action_id(self):
         """Returns the id"""
-        return self.__action_id
+        return self._action_id
 
     def get_start_time(self):
         """Returns the start time"""
-        return self.__start_time
+        return self._start_time
 
     def get_end_time(self):
         """Returns the end time"""
-        return self.__end_time
+        return self._end_time
 
     def get_interval(self):
         """Returns the interval"""
-        return self.__interval
+        return self._interval
 
     def get_last_run_time(self):
         """Returns the last time the task ran"""
-        return self.__last_run_time
+        return self._last_run_time
 
     def set_last_run_time(self):
         """Set the last time the task ran"""
-        self.__last_run_time = get_time()
+        self._last_run_time = timings.get_time()
 
     def execute_in_interval(self, interval_start, interval_end):
         """Returns whether the task should be executed in a given interval"""
@@ -97,7 +137,7 @@ class Task:
                 raise NotImplementedError("Method %s not implemented" % executable_name)
 
             self.set_last_run_time()
-            executable()
+            executable(self.get_config(), self.get_database())
 
             return True
         return False

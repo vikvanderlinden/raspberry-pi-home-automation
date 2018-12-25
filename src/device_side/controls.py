@@ -2,6 +2,7 @@
     The main file of the application.
 """
 import os
+import time
 from watchdog.events import PatternMatchingEventHandler #pylint: disable=E0401
 from watchdog.observers import Observer #pylint: disable=E0401
 # import switches
@@ -9,8 +10,8 @@ import schedule #pylint: disable=E0401
 import actions #pylint: disable=E0401
 import speech #pylint: disable=E0401
 import database #pylint: disable=E0401
-import Config #pylint: disable=E0401
-from . import time
+import config #pylint: disable=E0401
+import timings #pylint: disable=E0401
 
 
 def notify(src_path):
@@ -35,16 +36,16 @@ class NotificationHandler(PatternMatchingEventHandler):
         """Handles creation of event"""
         notify(event.src_path)
 
-CONFIG = Config('./configuration/.env')
+CONFIG = config.Config('./device_side/configuration/.env')
 
 # Variables
-LAST_AUTO_UPDATE = time.get_time()
+LAST_AUTO_UPDATE = timings.get_time()
 
 # Initializations
 DATABASE = database.DB(CONFIG.get('database.host'), CONFIG.get('database.user'),
                        CONFIG.get('database.password'), CONFIG.get('database.name'))
 ACTIONS = actions.Actions(DATABASE)
-SCHEDULE = schedule.Schedule(DATABASE, ACTIONS)
+SCHEDULE = schedule.Schedule(CONFIG, DATABASE, ACTIONS)
 OBSERVER = Observer()
 
 # Definitions
@@ -64,9 +65,9 @@ if __name__ == "__main__":
 
     try:
         while True:
-            if time.get_time() - LAST_AUTO_UPDATE > 24 * 60 * 60:
+            if timings.get_time() - LAST_AUTO_UPDATE > 24 * 60 * 60:
                 # Auto-refresh schedule every day
-                LAST_AUTO_UPDATE = time.get_time()
+                LAST_AUTO_UPDATE = timings.get_time()
                 SCHEDULE.update()
                 speech.say("I did an autoupdate as is was a full day ago")
 

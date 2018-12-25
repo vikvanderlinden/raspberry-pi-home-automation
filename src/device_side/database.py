@@ -47,7 +47,8 @@ class DB:
     def insert(self, table, columns=dict(), values=[]):
         """Prepares an inser-query"""
         query = "INSERT INTO " + str(table) + " (" + str(', '.join(columns.keys())) + \
-                ") VALUES (" + str(', '.join(columns.values())) + ");" % tuple(values)
+                ") VALUES ('" + str('\', \''.join(columns.values())) + "');"
+        query = query % tuple(values)
 
         try:
             self.execute(query)

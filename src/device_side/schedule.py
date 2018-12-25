@@ -1,44 +1,53 @@
-from speech import *
-from time import *
-from task import *
+"""
+    Shedules the tasks.
+"""
+
+import speech #pylint: disable=E0401
+import timings #pylint: disable=E0401
+import task #pylint: disable=E0401
 
 
 class Schedule:
     """This class handles the shedule defined in the database"""
-    def __init__(self, database, actions):
-        self.__tasks = []
-        self.__database = database
-        self.__actions = actions
-        self.__last_check = get_time()
+    def __init__(self, config, database, actions):
+        self._config = config
+        self._tasks = []
+        self._database = database
+        self._actions = actions
+        self._last_check = timings.get_time()
 
         self.update()
 
+    def get_config(self):
+        """Return the config object"""
+        return self._config
+
     def get_last_check(self):
         """Return the last check"""
-        return self.__last_check
+        return self._last_check
 
     def get_tasks(self):
         """Returns the tasks"""
-        return self.__tasks
+        return self._tasks
 
     def set_tasks(self, tasks):
         """Set the tasks"""
-        self.__tasks = tasks
+        self._tasks = tasks
 
     def get_database(self):
         """Returns the database"""
-        return self.__database
+        return self._database
 
     def get_actions(self):
         """Returns the actions"""
-        return self.__actions
+        return self._actions
 
     def set_last_check(self, check_time=None):
         """Sets the last check"""
         if check_time is not None:
-            self.__last_check = check_time
+            self._last_check = check_time
         else:
-            self.__last_check = get_time()
+            self._last_check = timings.get_time()
 
     def update(self):
         """Updates the schedule from the DB"""
@@ -52,10 +61,10 @@ class Schedule:
         # PROCESS TASKS
         if new_schedule is not False:
             for new_task in new_schedule:
-                new_tasks.append(Task(self.get_actions(), *new_task))
+                new_tasks.append(task.Task(self.get_config(), self.get_database(), self.get_actions(), *new_task))
 
             self.set_tasks(new_tasks)
-            say("I've updated the schedule, " + str(len(new_tasks)) + " tasks are set.")
+            speech.say("I've updated the schedule, " + str(len(new_tasks)) + " tasks are set.")
 
     def run(self):
         """checks and executes items between last check and now"""
@@ -71,7 +80,7 @@ class Schedule:
         """ Returns the items to be executed between the last check and current time """
         tasks = []
 
-        current_time = get_time()
+        current_time = timings.get_time()
 
         for task in self.get_tasks():
             if task.execute_in_interval(self.get_last_check(), current_time):
